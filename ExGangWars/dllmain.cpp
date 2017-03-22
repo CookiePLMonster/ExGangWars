@@ -62,18 +62,51 @@ bool __stdcall CanNotPedtypeBeProvoked(int32_t nPedType)
 		return true;
 }
 
+// Silent: you should get rid of this, or change my code a bit or something...
 int32_t GetRivalGangsTotalDensity(uint32_t nZoneExtraInfoID)
 {
 	// We need to get a total strength of all gangs player can fight with
 	// so the game can decide whether to start a defensive gang war there
 	int32_t		nTotalStrength = 0;
 
-	for ( int32_t i = 0; i < 10; i++ )
+	for (int32_t i = 0; i < 10; i++)
 	{
-		if ( CustomGangInfo[i].bCanFightWith )
+		if (CustomGangInfo[i].bCanFightWith)
 			nTotalStrength += ZoneInfoArray[nZoneExtraInfoID].GangDensity[i];
 	}
 	return nTotalStrength;
+}
+
+static DWORD FixGangWarInvalidZoneCrash_RET = 0x443B58;
+
+static int32_t nTotalStrength;
+static uint32_t nZoneExtraInfoID = 0;
+static int32_t i;
+
+__declspec(naked) void FixGangWarInvalidZoneCrash()
+{
+	_asm pushad;
+	_asm movzx ebx, ax;
+	_asm mov nZoneExtraInfoID, ebx;
+
+	// Gets the total gang density
+	for (i = 0; i < 10; i++)
+	{
+		if (i != 8)
+		{
+			nTotalStrength += ZoneInfoArray[nZoneExtraInfoID].GangDensity[i];
+		}
+	}
+
+	// Compiler might generate code which uses some registers which are in use, so revert the register values to the ones before the code was executed.
+	_asm popad;
+
+	_asm
+	{
+		mov				ebx, nTotalStrength
+		imul			ebx, 0x11
+		jmp				FixGangWarInvalidZoneCrash_RET
+	}
 }
 
 void FillZonesWithGangColours(bool bDontColour)
@@ -212,13 +245,8 @@ void Patch_SA_10()
 	// Allow defensive gang wars in entire state
 	Patch<uint16_t>(0x443B9D, 0x65EB);
 
-	// push ebx \ call GetRivalGangsTotalDensity \ add esp, 4 \ imul ebx, 11h \ cmp eax, 14h
-	Patch<uint8_t>(0x443B55, 0x53);
-	Patch<uint32_t>(0x443B5B, 0x6B04C483);
-	Patch<uint32_t>(0x443B5F, 0xF88311DB);
-	Patch<uint32_t>(0x443B63, 0x90909014);
-	Nop(0x443B67, 4);
-	InjectHook(0x443B56, GetRivalGangsTotalDensity, PATCH_CALL);
+	// Calls fixed crash function
+	InjectHook(0x443B52, FixGangWarInvalidZoneCrash, PATCH_JUMP);
 
 	// lea edx, CTheZones::ZoneInfoArray[ebx] \ push edx \ call PickDefensiveGang
 	Patch<uint16_t>(0x443C3B, 0x938D);
