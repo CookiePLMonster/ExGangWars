@@ -212,13 +212,13 @@ void Patch_SA_10()
 	// Allow defensive gang wars in entire state
 	Patch<uint16_t>(0x443B9D, 0x65EB);
 
-	// push ebx \ call GetRivalGangsTotalDensity \ add esp, 4 \ imul ebx, 11h \ cmp eax, 14h
-	Patch<uint8_t>(0x443B55, 0x53);
-	Patch<uint32_t>(0x443B5B, 0x6B04C483);
-	Patch<uint32_t>(0x443B5F, 0xF88311DB);
-	Patch<uint32_t>(0x443B63, 0x90909014);
-	Nop(0x443B67, 4);
-	InjectHook(0x443B56, GetRivalGangsTotalDensity, PATCH_CALL);
+	// push edx \ push ebx \ call GetRivalGangsTotalDensity \ add esp, 4 \ pop edx \ imul ebx, 11h \ cmp eax, 14h
+	Patch<uint16_t>(0x443B55, 0x5352);
+	InjectHook(0x443B55 + 2, GetRivalGangsTotalDensity, PATCH_CALL);
+	Patch<uint32_t>(0x443B55 + 7, 0x5A04C483);
+	Patch<uint32_t>(0x443B55 + 11, 0x8311DB6B);
+	Patch<uint32_t>(0x443B55 + 15, 0x909014F8);
+	Nop(0x443B55 + 19, 3);
 
 	// lea edx, CTheZones::ZoneInfoArray[ebx] \ push edx \ call PickDefensiveGang
 	Patch<uint16_t>(0x443C3B, 0x938D);
@@ -262,13 +262,13 @@ void Patch_SA_11()
 	// Allow defensive gang wars in entire state
 	Patch<uint16_t>(0x443C1D, 0x65EB);
 
-	// push ebx \ call GetRivalGangsTotalDensity \ add esp, 4 \ imul ebx, 11h \ cmp eax, 14h
-	Patch<uint8_t>(0x443BD5, 0x53);
-	Patch<uint32_t>(0x443BDB, 0x6B04C483);
-	Patch<uint32_t>(0x443BDF, 0xF88311DB);
-	Patch<uint32_t>(0x443BE3, 0x90909014);
-	Nop(0x443BE7, 4);
-	InjectHook(0x443BD6, GetRivalGangsTotalDensity, PATCH_CALL);
+	// push edx \ push ebx \ call GetRivalGangsTotalDensity \ add esp, 4 \ pop edx \ imul ebx, 11h \ cmp eax, 14h
+	Patch<uint16_t>(0x443BD5, 0x5352);
+	InjectHook(0x443BD5 + 2, GetRivalGangsTotalDensity, PATCH_CALL);
+	Patch<uint32_t>(0x443BD5 + 7, 0x5A04C483);
+	Patch<uint32_t>(0x443BD5 + 11, 0x8311DB6B);
+	Patch<uint32_t>(0x443BD5 + 15, 0x909014F8);
+	Nop(0x443BD5 + 19, 3);
 
 	// lea edx, CTheZones::ZoneInfoArray[ebx] \ push edx \ call PickDefensiveGang
 	Patch<uint16_t>(0x443CBB, 0x938D);
