@@ -12,8 +12,6 @@
 [Rr]elease/
 [Nn]ormal/
 [Nn]ightly/
-[Dd]ev [Bb]uild/
-[Rr]elease [Cc]andidate/
 output/
 symbols/
 x64/
@@ -62,10 +60,13 @@ _Chutzpah*
 
 # Visual C++ cache files
 ipch/
+.vs/
 *.aps
 *.ncb
 *.opensdf
 *.sdf
+*.db
+*.opendb
 *.cachefile
 
 # Visual Studio profiler
@@ -190,5 +191,3 @@ Desktop.ini
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
-dependencies/tools/lastrev.txt
-buildnumber.h
