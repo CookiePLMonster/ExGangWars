@@ -1,5 +1,4 @@
 #define WIN32_LEAN_AND_MEAN
-#define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX		// Fixes windef.h conflicting with STL min/max
 
 // Target Windows 2000
@@ -12,6 +11,8 @@
 #include <algorithm>
 #include <cstdint>
 #include "MemoryMgr.h"
+
+const size_t NUM_GANGS = 10;
 
 // SA classes
 class CRGBA
@@ -50,7 +51,7 @@ public:
 class CZoneInfo
 {
 public:
-	uint8_t					GangDensity[10];
+	uint8_t					GangDensity[NUM_GANGS];
 	uint8_t					DrugDealerCounter;
 	CRGBA					ZoneColour;
 	bool					unk1 : 1;

@@ -24,7 +24,7 @@ auto SetStatValue = AddressByVersion<void(*)(uint16_t,float)>(0x55A070, 0x55A510
 
 
 // Custom ExGangWars variables
-tGangInfo		CustomGangInfo[10];
+tGangInfo		CustomGangInfo[NUM_GANGS];
 
 
 // This function needs to remove the parameter from the stack by itself
@@ -34,7 +34,7 @@ int32_t __stdcall PickDefensiveGang(CZoneInfo* pZone)
 	int32_t		nCurrentStrongestGang = -1;
 	int32_t		nStrongestGangStrength = -1;
 
-	for ( int32_t i = 0; i < 10; i++ )
+	for ( int32_t i = 0; i < NUM_GANGS; i++ )
 	{
 		if ( CustomGangInfo[i].bCanFightWith )
 		{
@@ -68,7 +68,7 @@ int32_t GetRivalGangsTotalDensity(uint32_t nZoneExtraInfoID)
 	// so the game can decide whether to start a defensive gang war there
 	int32_t		nTotalStrength = 0;
 
-	for ( int32_t i = 0; i < 10; i++ )
+	for ( int32_t i = 0; i < NUM_GANGS; i++ )
 	{
 		if ( CustomGangInfo[i].bCanFightWith )
 			nTotalStrength += ZoneInfoArray[nZoneExtraInfoID].GangDensity[i];
@@ -78,92 +78,85 @@ int32_t GetRivalGangsTotalDensity(uint32_t nZoneExtraInfoID)
 
 void FillZonesWithGangColours(bool bDontColour)
 {
-	if ( TotalNumberOfZoneInfos )
+	for ( int16_t i = 0; i < TotalNumberOfZoneInfos; i++ )
 	{
-		for ( int16_t i = 0; i < TotalNumberOfZoneInfos; i++ )
+		uint32_t	nTotalDensity = 0;
+		uint32_t	bRedToPick = 0, bGreenToPick = 0, bBlueToPick = 0;
+
+		for ( int j = 0; j < NUM_GANGS; j++ )
 		{
-			uint32_t	nTotalDensity = 0;
-			uint32_t	bRedToPick = 0, bGreenToPick = 0, bBlueToPick = 0;
-
-			for ( int j = 0; j < 10; j++ )
+			if ( CustomGangInfo[j].bShowOnMap )
 			{
-				if ( CustomGangInfo[j].bShowOnMap )
-				{
-					nTotalDensity += ZoneInfoArray[i].GangDensity[j];
-					bRedToPick += CustomGangInfo[j].bRed * ZoneInfoArray[i].GangDensity[j];
-					bGreenToPick += CustomGangInfo[j].bGreen * ZoneInfoArray[i].GangDensity[j];
-					bBlueToPick += CustomGangInfo[j].bBlue * ZoneInfoArray[i].GangDensity[j];
-				}
+				nTotalDensity += ZoneInfoArray[i].GangDensity[j];
+				bRedToPick += CustomGangInfo[j].bRed * ZoneInfoArray[i].GangDensity[j];
+				bGreenToPick += CustomGangInfo[j].bGreen * ZoneInfoArray[i].GangDensity[j];
+				bBlueToPick += CustomGangInfo[j].bBlue * ZoneInfoArray[i].GangDensity[j];
 			}
-
-			ZoneInfoArray[i].bUseColour = nTotalDensity && !bDontColour && CanPlayerStartAGangWarHere(&ZoneInfoArray[i]);
-			ZoneInfoArray[i].bInGangWar = false;
-
-			ZoneInfoArray[i].ZoneColour.a = static_cast<uint8_t>(std::min<uint32_t>(120, 3 * nTotalDensity));	// Oh well...
-
-			if ( nTotalDensity )
-				ZoneInfoArray[i].ZoneColour.a = std::max<uint8_t>(55, ZoneInfoArray[i].ZoneColour.a);
-			else
-				nTotalDensity = 1;
-
-			// The result is a simple weighted arithmetic average
-			// each gang's RGB having the weight of gang's density in this area
-			ZoneInfoArray[i].ZoneColour.r = static_cast<uint8_t>(bRedToPick / nTotalDensity);
-			ZoneInfoArray[i].ZoneColour.g = static_cast<uint8_t>(bGreenToPick / nTotalDensity);
-			ZoneInfoArray[i].ZoneColour.b = static_cast<uint8_t>(bBlueToPick / nTotalDensity);
 		}
+
+		ZoneInfoArray[i].bUseColour = nTotalDensity && !bDontColour && CanPlayerStartAGangWarHere(&ZoneInfoArray[i]);
+		ZoneInfoArray[i].bInGangWar = false;
+
+		ZoneInfoArray[i].ZoneColour.a = static_cast<uint8_t>(std::min<uint32_t>(120, 3 * nTotalDensity));	// Oh well...
+
+		if ( nTotalDensity != 0 )
+			ZoneInfoArray[i].ZoneColour.a = std::max<uint8_t>(55, ZoneInfoArray[i].ZoneColour.a);
+		else
+			nTotalDensity = 1;
+
+		// The result is a simple weighted arithmetic average
+		// each gang's RGB having the weight of gang's density in this area
+		ZoneInfoArray[i].ZoneColour.r = static_cast<uint8_t>(bRedToPick / nTotalDensity);
+		ZoneInfoArray[i].ZoneColour.g = static_cast<uint8_t>(bGreenToPick / nTotalDensity);
+		ZoneInfoArray[i].ZoneColour.b = static_cast<uint8_t>(bBlueToPick / nTotalDensity);
 	}
 }
 
 void UpdateTerritoryUnderControlPercentage()
 {
-	std::pair<uint8_t,uint8_t>	vecZonesForGang[10];
+	std::pair<uint8_t,uint8_t>	vecZonesForGang[NUM_GANGS];
 	int32_t						nTotalTerritories = 0;
 
 	// Initialise the array
-	for ( uint8_t i = 1; i < 10; i++ )
-		vecZonesForGang[i].first = i;
-
-	if ( TotalNumberOfNavigationZones )
+	for ( uint8_t i = 1; i < NUM_GANGS; i++ )
 	{
-		// Count the turfs belonging to each gang
-		for ( int32_t i = 0; i < TotalNumberOfNavigationZones; i++ )
+		vecZonesForGang[i].first = i;
+	}
+
+	// Count the turfs belonging to each gang
+	for ( int32_t i = 0; i < TotalNumberOfNavigationZones; i++ )
+	{
+		uint16_t		nZoneInfoIndex = NavigationZoneArray[i].nZoneInfoIndex;
+		if ( nZoneInfoIndex != 0 )
 		{
-			uint16_t		nZoneInfoIndex = NavigationZoneArray[i].nZoneInfoIndex;
-			if ( nZoneInfoIndex )
+			// Should we even count this territory?
+			bool	bCountMe = false;
+
+			for ( uint32_t j = 0; j < NUM_GANGS; j++ )
 			{
-				// Should we even count this territory?
-				bool	bCountMe = false;
-
-				for ( uint32_t j = 0; j < 10; j++ )
+				if ( (j == 1 || CustomGangInfo[j].bCanFightWith) && ZoneInfoArray[nZoneInfoIndex].GangDensity[j] != 0 )
 				{
-					if ( (j == 1 || CustomGangInfo[j].bCanFightWith) && ZoneInfoArray[nZoneInfoIndex].GangDensity[j] )
-					{
-						bCountMe = true;
-						break;
-					}
+					bCountMe = true;
+					break;
+				}
+			}
+
+			if ( bCountMe )
+			{
+				// Instantiate a very temporary array to find what gang has the most influence in this area
+				uint8_t					vecGangPopularity[NUM_GANGS];
+				int32_t					nArrIndex = 0;
+
+				for ( uint8_t j = 0; j < NUM_GANGS; j++ )
+				{
+					vecGangPopularity[nArrIndex++] = j == 1 || CustomGangInfo[j].bCanFightWith ? ZoneInfoArray[nZoneInfoIndex].GangDensity[j] : 0;
 				}
 
-				if ( bCountMe )
-				{
-					// Instantiate a very temporary array to find what gang has the most influence in this area
-					std::pair<uint8_t,uint8_t>		vecGangPopularity[10];
-					int32_t							nArrIndex = 0;
+				auto it = std::max_element(vecGangPopularity, vecGangPopularity+nArrIndex);
 
-					for ( uint32_t j = 0; j < 10; j++ )
-					{
-						if ( j == 1 || CustomGangInfo[j].bCanFightWith )
-							vecGangPopularity[nArrIndex++] = std::make_pair(j, ZoneInfoArray[nZoneInfoIndex].GangDensity[j]);
-					}
-
-					// Sort it!
-					std::sort(vecGangPopularity, vecGangPopularity+10, [] (const std::pair<uint8_t,uint8_t>& Left, const std::pair<uint8_t,uint8_t>& Right)
-							{ return Left.second > Right.second; } );
-
-					// Add to gang's territory counter
-					vecZonesForGang[vecGangPopularity[0].first].second++;
-					nTotalTerritories++;
-				}
+				// Add to gang's territory counter
+				vecZonesForGang[std::distance(std::begin(vecGangPopularity), it)].second++;
+				nTotalTerritories++;
 			}
 		}
 	}
@@ -172,12 +165,12 @@ void UpdateTerritoryUnderControlPercentage()
 	SetStatValue(236, vecZonesForGang[1].second);										// NUMBER_TERRITORIES_HELD
 	SetStatValue(237, std::max<float>(vecZonesForGang[1].second, GetStatValue(237)));	// HIGHEST_NUMBER_TERRITORIES_HELD
 
-	if ( nTotalTerritories )
+	if ( nTotalTerritories != 0 )
 	{
 		TerritoryUnderControlPercentage = static_cast<float>(vecZonesForGang[1].second) / nTotalTerritories;
 
 		// Sort the array to find top 3 gangs
-		std::sort(vecZonesForGang, vecZonesForGang+10, [] (const std::pair<uint8_t,uint8_t>& Left, const std::pair<uint8_t,uint8_t>& Right)
+		std::sort(std::begin(vecZonesForGang), std::end(vecZonesForGang), [] (const std::pair<uint8_t,uint8_t>& Left, const std::pair<uint8_t,uint8_t>& Right)
 				{ return Left.second > Right.second; } );
 
 		GangRatings[0] = vecZonesForGang[0].first;
@@ -354,16 +347,16 @@ extern "C" BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserve
 		if (*(uint32_t*)0x82457C == 0x94BF || *(uint32_t*)0x8245BC == 0x94BF) Patch_SA_10();
 		else if (*(uint32_t*)0x8252FC == 0x94BF || *(uint32_t*)0x82533C == 0x94BF) Patch_SA_11();
 		else if (*(uint32_t*)0x85EC4A == 0x94BF) Patch_SA_Steam();
-		else return TRUE;
+		else return FALSE;
 
 		// Parse the INI file
-		for ( int32_t i = 0; i < 10; i++ )
+		for ( int32_t i = 0; i < NUM_GANGS; i++ )
 		{
 			char		sectionName[64];
 			char		hexColourBuf[32];
 			uint32_t	turfColour;
 
-			_snprintf(sectionName, sizeof(sectionName), "Gang%d", i+1);
+			sprintf_s(sectionName, "Gang%d", i+1);
 
 			if ( i != 1 )
 				CustomGangInfo[i].bCanFightWith = GetPrivateProfileInt(sectionName, "CanFightWith", TRUE, ".\\ExGangWars.ini") != FALSE;
@@ -375,10 +368,9 @@ extern "C" BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserve
 
 			StrToIntEx(hexColourBuf, STIF_SUPPORT_HEX, reinterpret_cast<int*>(&turfColour));
 
-			// Is nonzero?
-			if ( turfColour )
+			if ( turfColour != 0 )
 			{
-				CustomGangInfo[i].bRed = static_cast<uint8_t>(turfColour >> 16);
+				CustomGangInfo[i].bRed = (turfColour >> 16) & 0xFF;
 				CustomGangInfo[i].bGreen = (turfColour >> 8) & 0xFF;
 				CustomGangInfo[i].bBlue = turfColour & 0xFF;
 
