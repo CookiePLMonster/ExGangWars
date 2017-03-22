@@ -194,7 +194,7 @@ void UpdateTerritoryUnderControlPercentage()
 
 void Patch_SA_10()
 {
-	using namespace MemoryVP;
+	using namespace Memory;
 
 	InjectHook(0x572440, FillZonesWithGangColours, PATCH_JUMP);
 	InjectHook(0x44665D, UpdateTerritoryUnderControlPercentage);
@@ -244,7 +244,7 @@ void Patch_SA_10()
 
 void Patch_SA_11()
 {
-	using namespace MemoryVP;
+	using namespace Memory;
 
 	InjectHook(0x572940, FillZonesWithGangColours, PATCH_JUMP);
 	InjectHook(0x4466DD, UpdateTerritoryUnderControlPercentage);
@@ -294,7 +294,7 @@ void Patch_SA_11()
 
 void Patch_SA_Steam()
 {
-	using namespace MemoryVP;
+	using namespace Memory;
 
 	InjectHook(0x587400, FillZonesWithGangColours, PATCH_JUMP);
 	InjectHook(0x44A4ED, UpdateTerritoryUnderControlPercentage);
@@ -349,6 +349,8 @@ extern "C" BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserve
 	UNREFERENCED_PARAMETER(lpReserved);
 	if(reason == DLL_PROCESS_ATTACH)
 	{
+		ScopedUnprotect::Section Protect( GetModuleHandle( nullptr ), ".text" );
+
 		if (*(uint32_t*)0x82457C == 0x94BF || *(uint32_t*)0x8245BC == 0x94BF) Patch_SA_10();
 		else if (*(uint32_t*)0x8252FC == 0x94BF || *(uint32_t*)0x82533C == 0x94BF) Patch_SA_11();
 		else if (*(uint32_t*)0x85EC4A == 0x94BF) Patch_SA_Steam();
