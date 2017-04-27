@@ -366,7 +366,10 @@ extern "C" BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserve
 			// Get turf RGB colours
 			GetPrivateProfileString(sectionName, L"TurfColour", nullptr, hexColourBuf, sizeof(hexColourBuf), L".\\ExGangWars.ini");
 
-			StrToIntEx(hexColourBuf, STIF_SUPPORT_HEX, reinterpret_cast<int*>(&turfColour));
+			if ( StrToIntEx(hexColourBuf, STIF_SUPPORT_HEX, reinterpret_cast<int*>(&turfColour)) == FALSE )
+			{
+				turfColour = 0;
+			}
 
 			if ( turfColour != 0 )
 			{
