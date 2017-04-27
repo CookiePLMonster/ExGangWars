@@ -94,7 +94,7 @@ void FillZonesWithGangColours(bool bDontColour)
 			}
 		}
 
-		ZoneInfoArray[i].bUseColour = nTotalDensity && !bDontColour && CanPlayerStartAGangWarHere(&ZoneInfoArray[i]);
+		ZoneInfoArray[i].bUseColour = nTotalDensity != 0 && !bDontColour && CanPlayerStartAGangWarHere(&ZoneInfoArray[i]);
 		ZoneInfoArray[i].bInGangWar = false;
 
 		ZoneInfoArray[i].ZoneColour.a = static_cast<uint8_t>(std::min<uint32_t>(120, 3 * nTotalDensity));	// Oh well...
@@ -352,19 +352,19 @@ extern "C" BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserve
 		// Parse the INI file
 		for ( int32_t i = 0; i < NUM_GANGS; i++ )
 		{
-			char		sectionName[64];
-			char		hexColourBuf[32];
+			wchar_t		sectionName[64];
+			wchar_t		hexColourBuf[32];
 			uint32_t	turfColour;
 
-			sprintf_s(sectionName, "Gang%d", i+1);
+			swprintf_s(sectionName, L"Gang%d", i+1);
 
 			if ( i != 1 )
-				CustomGangInfo[i].bCanFightWith = GetPrivateProfileInt(sectionName, "CanFightWith", TRUE, ".\\ExGangWars.ini") != FALSE;
+				CustomGangInfo[i].bCanFightWith = GetPrivateProfileInt(sectionName, L"CanFightWith", TRUE, L".\\ExGangWars.ini") != FALSE;
 			else	// For Groves, you can't fight with them, no matter what the player sets
 				CustomGangInfo[i].bCanFightWith = false;
 
 			// Get turf RGB colours
-			GetPrivateProfileString(sectionName, "TurfColour", nullptr, hexColourBuf, sizeof(hexColourBuf), ".\\ExGangWars.ini");
+			GetPrivateProfileString(sectionName, L"TurfColour", nullptr, hexColourBuf, sizeof(hexColourBuf), L".\\ExGangWars.ini");
 
 			StrToIntEx(hexColourBuf, STIF_SUPPORT_HEX, reinterpret_cast<int*>(&turfColour));
 
@@ -380,7 +380,7 @@ extern "C" BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserve
 				CustomGangInfo[i].bShowOnMap = false;
 
 			// Get an appropriate blip ID, default to 19 if not present in the INI
-			CustomGangInfo[i].nBlipIndex = GetPrivateProfileInt(sectionName, "AttackBlip", 19, ".\\ExGangWars.ini");
+			CustomGangInfo[i].nBlipIndex = GetPrivateProfileInt(sectionName, L"AttackBlip", 19, L".\\ExGangWars.ini");
 		}
 
 	}
