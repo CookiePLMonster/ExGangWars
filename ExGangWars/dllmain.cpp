@@ -1,4 +1,4 @@
-// Extended Gang Wars 1.0 mod
+// Extended Gang Wars 1.1 mod
 // Made by Silent
 
 // NOTE FOR MINGW USERS
@@ -6,15 +6,27 @@
 
 #include "General.h"
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
+#define WINVER 0x0500
+#define _WIN32_WINNT 0x0500
+
+#include <windows.h>
+#include <shlwapi.h>
+#include <algorithm>
+#include "MemoryMgr.h"
+
+
 // SA global variables
-int32_t&		TotalNumberOfNavigationZones = **AddressByVersion<int32_t**>(0x443B06, 0x443B86, 0x447806);
-int16_t&		TotalNumberOfZoneInfos = **AddressByVersion<int16_t**>(0x572200, 0x572700, 0x587182);
-CZone*			NavigationZoneArray = *AddressByVersion<CZone**>(0x443C1C, 0x443C9C, 0x44791F);
-CZoneInfo*		ZoneInfoArray = *AddressByVersion<CZoneInfo**>(0x443C51, 0x443CD1, 0x447965);
+int32_t&			TotalNumberOfNavigationZones = **AddressByVersion<int32_t**>(0x443B06, 0x443B86, 0x447806);
+int16_t&			TotalNumberOfZoneInfos = **AddressByVersion<int16_t**>(0x572200, 0x572700, 0x587182);
+CZone* const		NavigationZoneArray = *AddressByVersion<CZone**>(0x443C1C, 0x443C9C, 0x44791F);
+CZoneInfo* const	ZoneInfoArray = *AddressByVersion<CZoneInfo**>(0x443C51, 0x443CD1, 0x447965);
 
 float&			TerritoryUnderControlPercentage = **AddressByVersion<float**>(0x443EDB, 0x443F5B, 0x447C6E);
-int32_t*		GangRatings = *AddressByVersion<int32_t**>(0x443F07, 0x443F87, 0x447C90);
-int32_t*		GangRatingStrength = *AddressByVersion<int32_t**>(0x443F0D, 0x443F8D, 0x447C96);
+int32_t* const	GangRatings = *AddressByVersion<int32_t**>(0x443F07, 0x443F87, 0x447C90);
+int32_t* const 	GangRatingStrength = *AddressByVersion<int32_t**>(0x443F0D, 0x443F8D, 0x447C96);
 
 
 // SA function pointers
@@ -24,7 +36,7 @@ auto SetStatValue = AddressByVersion<void(*)(uint16_t,float)>(0x55A070, 0x55A510
 
 
 // Custom ExGangWars variables
-tGangInfo		CustomGangInfo[NUM_GANGS];
+static tGangInfo		CustomGangInfo[NUM_GANGS];
 
 
 // This function needs to remove the parameter from the stack by itself
@@ -97,7 +109,7 @@ void FillZonesWithGangColours(bool bDontColour)
 		ZoneInfoArray[i].bUseColour = nTotalDensity != 0 && !bDontColour && CanPlayerStartAGangWarHere(&ZoneInfoArray[i]);
 		ZoneInfoArray[i].bInGangWar = false;
 
-		ZoneInfoArray[i].ZoneColour.a = static_cast<uint8_t>(std::min<uint32_t>(120, 3 * nTotalDensity));	// Oh well...
+		ZoneInfoArray[i].ZoneColour.a = static_cast<uint8_t>(std::min<uint32_t>(120, 3 * nTotalDensity));
 
 		if ( nTotalDensity != 0 )
 			ZoneInfoArray[i].ZoneColour.a = std::max<uint8_t>(55, ZoneInfoArray[i].ZoneColour.a);
@@ -118,15 +130,18 @@ void UpdateTerritoryUnderControlPercentage()
 	int32_t						nTotalTerritories = 0;
 
 	// Initialise the array
-	for ( uint8_t i = 1; i < NUM_GANGS; i++ )
 	{
-		vecZonesForGang[i].first = i;
+		uint8_t index = 0;
+		for ( auto& it : vecZonesForGang )
+		{
+			it.first = index++;
+		}
 	}
 
 	// Count the turfs belonging to each gang
 	for ( int32_t i = 0; i < TotalNumberOfNavigationZones; i++ )
 	{
-		uint16_t		nZoneInfoIndex = NavigationZoneArray[i].nZoneInfoIndex;
+		const uint32_t		nZoneInfoIndex = NavigationZoneArray[i].nZoneInfoIndex;
 		if ( nZoneInfoIndex != 0 )
 		{
 			// Should we even count this territory?
@@ -143,16 +158,15 @@ void UpdateTerritoryUnderControlPercentage()
 
 			if ( bCountMe )
 			{
-				// Instantiate a very temporary array to find what gang has the most influence in this area
+				// Instantiate a very temporary array to find which fightable gang has the most influence in this area
 				uint8_t					vecGangPopularity[NUM_GANGS];
-				int32_t					nArrIndex = 0;
 
 				for ( uint8_t j = 0; j < NUM_GANGS; j++ )
 				{
-					vecGangPopularity[nArrIndex++] = j == 1 || CustomGangInfo[j].bCanFightWith ? ZoneInfoArray[nZoneInfoIndex].GangDensity[j] : 0;
+					vecGangPopularity[j] = j == 1 || CustomGangInfo[j].bCanFightWith ? ZoneInfoArray[nZoneInfoIndex].GangDensity[j] : 0;
 				}
 
-				auto it = std::max_element(vecGangPopularity, vecGangPopularity+nArrIndex);
+				auto it = std::max_element( std::begin(vecGangPopularity), std::end(vecGangPopularity) );
 
 				// Add to gang's territory counter
 				vecZonesForGang[std::distance(std::begin(vecGangPopularity), it)].second++;
