@@ -184,7 +184,7 @@ void UpdateTerritoryUnderControlPercentage()
 		TerritoryUnderControlPercentage = static_cast<float>(vecZonesForGang[1].second) / nTotalTerritories;
 
 		// Sort the array to find top 3 gangs
-		std::sort(std::begin(vecZonesForGang), std::end(vecZonesForGang), [] (const std::pair<uint8_t,uint8_t>& Left, const std::pair<uint8_t,uint8_t>& Right)
+		std::partial_sort(std::begin(vecZonesForGang), std::begin(vecZonesForGang) + 3, std::end(vecZonesForGang), [] (const auto& Left, const auto& Right)
 				{ return Left.second > Right.second; } );
 
 		GangRatings[0] = vecZonesForGang[0].first;
