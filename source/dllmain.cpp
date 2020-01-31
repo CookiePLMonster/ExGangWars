@@ -1,9 +1,6 @@
 // Extended Gang Wars 1.1 mod
 // Made by Silent
 
-// NOTE FOR MINGW USERS
-// The plugin requires shlwapi.lib to be linked!
-
 #include "General.h"
 
 #define WIN32_LEAN_AND_MEAN
@@ -15,8 +12,10 @@
 #include <windows.h>
 #include <shlwapi.h>
 #include <algorithm>
-#include "MemoryMgr.h"
+#include "Utils/MemoryMgr.h"
+#include "Utils/MemoryMgr.GTA.h"
 
+#pragma comment(lib, "Shlwapi.lib")
 
 // SA global variables
 int32_t&			TotalNumberOfNavigationZones = **AddressByVersion<int32_t**>(0x443B06, 0x443B86, 0x447806);
