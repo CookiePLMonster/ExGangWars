@@ -184,7 +184,17 @@ void UpdateTerritoryUnderControlPercentage()
 
 		// Sort the array to find top 3 gangs
 		std::partial_sort(std::begin(vecZonesForGang), std::begin(vecZonesForGang) + 3, std::end(vecZonesForGang), [] (const auto& Left, const auto& Right)
-				{ return Left.second > Right.second; } );
+		{ 
+			if ( Right.second < Left.second ) return true;
+			if ( Left.second < Right.second ) return false;
+
+			// In case of a tie, game favours GSF, then Ballas, then Vagos
+			// So we sort by gang ID, with the exception that ID 1 (GSF) always comes first
+			if ( Left.first == 1 ) return true;
+			if ( Right.first == 1 ) return false;
+
+			return Left.first < Right.first;
+		});
 
 		GangRatings[0] = vecZonesForGang[0].first;
 		GangRatings[1] = vecZonesForGang[1].first;
