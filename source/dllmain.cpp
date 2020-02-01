@@ -1,4 +1,4 @@
-// Extended Gang Wars 1.1 mod
+// Extended Gang Wars 1.2 mod
 // Made by Silent
 
 #include "General.h"
