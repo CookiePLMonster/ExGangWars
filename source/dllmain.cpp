@@ -15,8 +15,6 @@
 #include "Utils/MemoryMgr.h"
 #include "Utils/MemoryMgr.GTA.h"
 
-#pragma comment(lib, "Shlwapi.lib")
-
 // SA global variables
 int32_t&			TotalNumberOfNavigationZones = **AddressByVersion<int32_t**>(0x443B06, 0x443B86, 0x447806);
 int16_t&			TotalNumberOfZoneInfos = **AddressByVersion<int16_t**>(0x572200, 0x572700, 0x587182);
@@ -378,7 +376,6 @@ extern "C" BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserve
 		{
 			wchar_t		sectionName[64];
 			wchar_t		hexColourBuf[32];
-			uint32_t	turfColour;
 
 			swprintf_s(sectionName, L"Gang%d", i+1);
 
@@ -389,11 +386,7 @@ extern "C" BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserve
 
 			// Get turf RGB colours
 			GetPrivateProfileString(sectionName, L"TurfColour", nullptr, hexColourBuf, sizeof(hexColourBuf), L".\\ExGangWars.ini");
-
-			if ( StrToIntEx(hexColourBuf, STIF_SUPPORT_HEX, reinterpret_cast<int*>(&turfColour)) == FALSE )
-			{
-				turfColour = 0;
-			}
+			uint32_t turfColour = wcstoul( hexColourBuf, nullptr, 0 );
 
 			if ( turfColour != 0 )
 			{
