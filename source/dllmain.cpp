@@ -125,7 +125,7 @@ void FillZonesWithGangColours(bool bDontColour)
 
 void UpdateTerritoryUnderControlPercentage()
 {
-	std::pair<uint8_t,uint8_t>	vecZonesForGang[NUM_GANGS];
+	std::pair<uint8_t,int32_t>	vecZonesForGang[NUM_GANGS];
 	int32_t						nTotalTerritories = 0;
 
 	// Initialise the array
@@ -175,8 +175,8 @@ void UpdateTerritoryUnderControlPercentage()
 	}
 
 	// Update the stats
-	SetStatValue(236, vecZonesForGang[1].second);										// NUMBER_TERRITORIES_HELD
-	SetStatValue(237, std::max<float>(vecZonesForGang[1].second, GetStatValue(237)));	// HIGHEST_NUMBER_TERRITORIES_HELD
+	SetStatValue(236, static_cast<float>(vecZonesForGang[1].second));								// NUMBER_TERRITORIES_HELD
+	SetStatValue(237, std::max(static_cast<float>(vecZonesForGang[1].second), GetStatValue(237)));	// HIGHEST_NUMBER_TERRITORIES_HELD
 
 	if ( nTotalTerritories != 0 )
 	{
