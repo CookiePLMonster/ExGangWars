@@ -367,9 +367,10 @@ extern "C" BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserve
 	{
 		ScopedUnprotect::Section Protect( GetModuleHandle( nullptr ), ".text" );
 
-		if (*(uint32_t*)DynBaseAddress(0x82457C) == 0x94BF || *(uint32_t*)DynBaseAddress(0x8245BC) == 0x94BF) Patch_SA_10();
-		else if (*(uint32_t*)DynBaseAddress(0x8252FC) == 0x94BF || *(uint32_t*)DynBaseAddress(0x82533C) == 0x94BF) Patch_SA_11();
-		else if (*(uint32_t*)DynBaseAddress(0x85EC4A) == 0x94BF) Patch_SA_Steam();
+		const int8_t version = Memory::GetVersion().version;
+		if ( version == 0 ) Patch_SA_10();
+		else if ( version == 1 ) Patch_SA_11();
+		else if ( version == 2 ) Patch_SA_Steam();
 		else return FALSE;
 
 		// Parse the INI file
